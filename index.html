@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול סיכונים - תוכן לימודי לא-ליניארי</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* כפתורי בקרה */
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .control-btn {
+            background: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+            display: none;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+            display: none;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+            color: white;
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+            color: white;
+        }
+
+        .edit-mode-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ffc107;
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+            display: none;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin: 30px 0 20px 0;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .context-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.3);
+        }
+
+        .context-box h3 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        .context-box p {
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .context-box ul {
+            list-style: none;
+            padding-right: 20px;
+            margin-top: 10px;
+        }
+
+        .context-box li {
+            padding: 5px 0;
+            padding-right: 20px;
+            position: relative;
+        }
+
+        .context-box li:before {
+            content: "✓";
+            position: absolute;
+            right: 0;
+            font-weight: bold;
+        }
+
+        .risk-card {
+            background: #f8f9fa;
+            border-right: 5px solid #dc3545;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .risk-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+
+        .risk-card.high {
+            border-right-color: #dc3545;
+        }
+
+        .risk-card.medium {
+            border-right-color: #ffc107;
+        }
+
+        .risk-card.low {
+            border-right-color: #28a745;
+        }
+
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .risk-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            font-weight: bold;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .risk-severity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .severity-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            color: white;
+        }
+
+        .severity-high {
+            background: #dc3545;
+        }
+
+        .severity-medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .severity-low {
+            background: #28a745;
+        }
+
+        .risk-metrics {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .risk-description {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-right: 3px solid #667eea;
+        }
+
+        .risk-subsection {
+            margin-bottom: 15px;
+        }
+
+        .risk-subsection h4 {
+            color: #495057;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .risk-subsection ul {
+            list-style: none;
+            padding-right: 20px;
+        }
+
+        .risk-subsection li {
+            padding: 8px 0;
+            padding-right: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .risk-subsection li:before {
+            content: "▪";
+            position: absolute;
+            right: 0;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .impacts li:before {
+            color: #dc3545;
+        }
+
+        .corrective-actions {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .corrective-actions h4 {
+            color: #2e7d32;
+            margin-bottom: 12px;
+        }
+
+        .action-item {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-right: 4px solid #4caf50;
+        }
+
+        .action-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-title {
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        .phase-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .phase-planning {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .phase-execution {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .phase-control {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .action-description {
+            color: #555;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .risk-component {
+            background: #fff8e1;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            margin-top: 8px;
+            color: #f57f17;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 30px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .summary-box h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .summary-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px 25px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .legend-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .legend-items {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .editable {
+            cursor: default;
+            transition: all 0.3s ease;
+        }
+
+        .editable[contenteditable="true"] {
+            cursor: text;
+            outline: none;
+        }
+
+        .editable[contenteditable="true"]:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+            border-radius: 3px;
+        }
+
+        .editable[contenteditable="true"]:focus {
+            background-color: rgba(102, 126, 234, 0.15);
+            border-radius: 3px;
+            outline: 2px solid #667eea;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+
+        /* הודעות */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-right: 4px solid #28a745;
+        }
+
+        .toast.error {
+            border-right: 4px solid #dc3545;
+        }
+
+        .toast.info {
+            border-right: 4px solid #2193b0;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .risk-card {
+                page-break-inside: avoid;
+            }
+            .control-panel,
+            .edit-mode-indicator {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .content {
+                padding: 20px;
+            }
+            .risk-header {
+                flex-direction: column;
+            }
+            .summary-stats {
+                flex-direction: column;
+            }
+            .control-panel {
+                left: 10px;
+                top: 10px;
+            }
+            .edit-mode-indicator {
+                right: 10px;
+                top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- כפתורי בקרה -->
+    <div class="control-panel">
+        <button class="control-btn btn-edit" onclick="toggleEditMode()">
+            ✏️ <span id="editBtnText">מצב עריכה</span>
+        </button>
+        <button class="control-btn btn-save" onclick="saveChanges()">
+            💾 שמור שינויים
+        </button>
+        <button class="control-btn btn-cancel" onclick="cancelChanges()">
+            ❌ בטל שינויים
+        </button>
+        <button class="control-btn btn-print" onclick="printReport()">
+            🖨️ הדפס
+        </button>
+        <button class="control-btn btn-export" onclick="exportToHTML()">
+            📥 ייצא HTML
+        </button>
+    </div>
+
+    <!-- אינדיקטור מצב עריכה -->
+    <div class="edit-mode-indicator" id="editIndicator">
+        ✏️ מצב עריכה פעיל
+    </div>
+
+    <!-- הודעות -->
+    <div class="toast" id="toast"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1 class="editable">⚠️ ניהול סיכונים</h1>
+            <p class="editable">תוכן לימודי לא-ליניארי - מתודיקה (שלב ראשוני)</p>
+        </div>
+
+        <div class="content">
+            <section class="section">
+                <h2 class="section-title editable">⚠️ ניהול סיכונים</h2>
+
+                <!-- הקשר -->
+                <div class="context-box">
+                    <h3 class="editable">📌 הקשר הפרויקט - שלב ראשוני</h3>
+                    <p class="editable">
+                        <strong>תוכן מיוצר על ידי אנשי מתודיקה</strong> (לא תוכן מג'ונרט בשלב זה). 
+                        האתגר המרכזי: התוכן בנוי במבנה <strong>לא-ליניארי ומסועף</strong>.
+                    </p>
+                    <p class="editable"><strong>דוגמה: נושא "זוויות קהות"</strong></p>
+                    <ul>
+                        <li class="editable">התלמיד בוחר <strong>עולם תוכן</strong>: כדורגל / אומנות / אדריכלות / מוזיקה / ריקוד / גרפיקה</li>
+                        <li class="editable">לאחר הבחירה, ההקניה מתבצעת ב<strong>מספר דרכים מגוונות</strong> שהתלמיד בוחר ביניהן</li>
+                        <li class="editable">כל מסלול כולל: טקסטים, סרטונים, אינטראקציות, משימות</li>
+                    </ul>
+                    <p class="editable" style="margin-top: 15px;">
+                        <strong>התוצאה:</strong> הבדיקה הליניארית המסורתית של המפמ"ר מחייבת התאמה - 
+                        כמות פריטים רבה × איפיונים שונים × מסלולים מסועפים = צורך במתודולוגיית בקרה חדשה.
+                    </p>
+                    <p class="editable">
+                        <strong>בשלב הבא:</strong> יתווסף גם תוכן מג'ונרט (AI), מה שמחזק את הצורך בהתאמת מנגנוני הבקרה כבר עכשיו.
+                    </p>
+                </div>
+
+                <!-- מקרא שלבי פיילוט -->
+                <div class="legend-box">
+                    <div class="legend-title">📋 מקרא שלבי פיילוט לפעילויות מתקנות:</div>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="phase-badge phase-planning">📐 תכנון</span>
+                            <span>הגדרת עקרונות, נהלים וקריטריונים מראש</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="phase-badge phase-execution">⚙️ ביצוע</span>
+                            <span>יישום בזמן אמת במהלך הפיילוט</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="phase-badge phase-control">📊 בקרה</span>
+                            <span>מדידה, ניטור והערכה שוטפת</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- קטגוריה א: סיכונים הנובעים ממבנה לא-ליניארי -->
+                <div class="category-header">
+                    📁 קטגוריה א': סיכונים הנובעים ממבנה התוכן הלא-ליניארי
+                </div>
+
+                <!-- סיכון 1 -->
+                <div class="risk-card high">
+                    <div class="risk-header">
+                        <div class="risk-title editable">1️⃣ אתגר מבני: מורכבות הבדיקה במבנה מסועף</div>
+                        <div class="risk-severity">
+                            <span class="severity-badge severity-high editable">גבוהה 🔴</span>
+                            <div class="risk-metrics">
+                                <span class="metric editable">הסתברות: 10/10</span>
+                                <span class="metric editable">השפעה: 8/10</span>
+                                <span class="metric editable">חומרה: 80</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="risk-description">
+                        <p class="editable"><strong>תיאור הסיכון:</strong><br>
+                        המבנה הלא-ליניארי והמסועף של התוכן (בחירת עולם תוכן → בחירת דרך הקניה → מסלולים מרובים) <strong>מציב אתגר משמעותי למודל הבדיקה המסורתי</strong>. המפמ"ר אינו יכול "לעבור על כל הפריטים" במתכונת הרגילה, שכן קיימים <strong>עשרות מסלולים אפשריים</strong> במקום רצף אחד. נדרשת חשיבה מחודשת על שיטות הדגימה והבקרה.</p>
+                    </div>
+
+                    <div class="risk-subsection impacts">
+                        <h4 class="editable">📉 השלכות אפשריות:</h4>
+                        <ul>
+                            <li class="editable">קושי לכסות את כל המסלולים בבדיקה מקיפה</li>
+                            <li class="editable">אי-ודאות לגבי אחידות הכיסוי הפדגוגי בין מסלולים</li>
+                            <li class="editable">צורך בהקצאת משאבים רבים יותר לתהליך הבדיקה</li>
+                        </ul>
+                    </div>
+
+                    <div class="corrective-actions">
+                        <h4>🔧 פעילויות מתקנות:</h4>
+                        
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">א. הגדרת מטריצת דגימה מייצגת</span>
+                                <span class="phase-badge phase-planning">📐 תכנון</span>
+                            </div>
+                            <div class="action-description">
+                                הגדרה מראש של מתודולוגיית דגימה שמבטיחה כיסוי של לפחות מסלול אחד מכל עולם תוכן ודרך הקניה. המפמ"ר יגדיר את הקריטריונים לבחירת המסלולים המייצגים.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: ריבוי מסלולים ללא יכולת כיסוי מלא</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ב. בדיקה מלאה של מסלולים נבחרים לפי שיקול המפמ"ר</span>
+                                <span class="phase-badge phase-execution">⚙️ ביצוע</span>
+                            </div>
+                            <div class="action-description">
+                                במהלך הפיילוט, המפמ"ר יבחר מסלולים ספציפיים לבדיקה מעמיקה ומלאה, תוך תיעוד הממצאים והמלצות לשיפור.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: חוסר יכולת לבדוק הכל → מיקוד בבדיקה איכותית של מדגם מייצג</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ג. ניטור שוטף של כיסוי המסלולים שנבדקו</span>
+                                <span class="phase-badge phase-control">📊 בקרה</span>
+                            </div>
+                            <div class="action-description">
+                                מעקב אחר אחוז המסלולים שנבדקו מתוך סך המסלולים, עם יעד מינימלי שנקבע מראש (למשל: 30% מהמסלולים עם פיזור מייצג).
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: אי-ודאות לגבי היקף הכיסוי</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- סיכון 2 -->
+                <div class="risk-card high">
+                    <div class="risk-header">
+                        <div class="risk-title editable">2️⃣ אתגר עקביות: פערים פדגוגיים בין עולמות תוכן</div>
+                        <div class="risk-severity">
+                            <span class="severity-badge severity-high editable">גבוהה 🔴</span>
+                            <div class="risk-metrics">
+                                <span class="metric editable">הסתברות: 9/10</span>
+                                <span class="metric editable">השפעה: 7/10</span>
+                                <span class="metric editable">חומרה: 63</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="risk-description">
+                        <p class="editable"><strong>תיאור הסיכון:</strong><br>
+                        כאשר אותו נושא (למשל "זוויות קהות") מוקנה ב-6 עולמות תוכן שונים (כדורגל, אומנות, אדריכלות וכו') ובמספר דרכי הקניה, <strong>עלולים להיווצר פערים ברמה הפדגוגית</strong>. יתכן שבעולם אחד ההסבר מעמיק ומדויק, ובעולם אחר פחות ממצה. ללא מנגנון להבטחת עקביות, קשה לוודא שכל התלמידים מקבלים הזדמנות למידה שוות ערך.</p>
+                    </div>
+
+                    <div class="risk-subsection impacts">
+                        <h4 class="editable">📉 השלכות אפשריות:</h4>
+                        <ul>
+                            <li class="editable">שונות בהישגים בהתאם למסלול הנבחר</li>
+                            <li class="editable">קושי בהערכה אחידה כשתלמידים למדו "גרסאות" שונות</li>
+                            <li class="editable">תחושת חוסר הוגנות אצל מורים ותלמידים</li>
+                        </ul>
+                    </div>
+
+                    <div class="corrective-actions">
+                        <h4>🔧 פעילויות מתקנות:</h4>
+                        
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">א. הגדרת "ליבת ידע מינימלית" אחידה</span>
+                                <span class="phase-badge phase-planning">📐 תכנון</span>
+                            </div>
+                            <div class="action-description">
+                                המפמ"ר יגדיר מראש רשימת מושגים, מיומנויות ותוצרי למידה שחייבים להופיע בכל מסלול, ללא קשר לעולם התוכן. זהו תנאי סף להגשת תוכן.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: פערים בכיסוי מושגים בין מסלולים</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ב. בדיקה השוואתית בין עולמות תוכן</span>
+                                <span class="phase-badge phase-execution">⚙️ ביצוע</span>
+                            </div>
+                            <div class="action-description">
+                                ביצוע בדיקה צולבת של אותו נושא ב-2-3 עולמות תוכן שונים, להשוואת עומק, דיוק ואיכות פדגוגית.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: שונות באיכות בין עולמות תוכן</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ג. מדידת עקביות לפי רובריקה פדגוגית</span>
+                                <span class="phase-badge phase-control">📊 בקרה</span>
+                            </div>
+                            <div class="action-description">
+                                יישום רובריקה אחידה לדירוג איכות פדגוגית בכל מסלול, עם מעקב אחר פערים בציונים בין עולמות תוכן. רף מקסימלי לפער: 20%.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: אי-יכולת לזהות ולכמת פערי איכות</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- קטגוריה ב: סיכונים הנובעים מחוסר בקרה פרטנית -->
+                <div class="category-header">
+                    📁 קטגוריה ב': סיכונים הנובעים מאתגרי בקרה פרטנית על התכנים
+                </div>
+
+                <!-- סיכון 3 -->
+                <div class="risk-card high">
+                    <div class="risk-header">
+                        <div class="risk-title editable">3️⃣ אתגר איכות: צורך בהבטחת תקינות מדיה ושפה</div>
+                        <div class="risk-severity">
+                            <span class="severity-badge severity-high editable">גבוהה 🔴</span>
+                            <div class="risk-metrics">
+                                <span class="metric editable">הסתברות: 7/10</span>
+                                <span class="metric editable">השפעה: 8/10</span>
+                                <span class="metric editable">חומרה: 56</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="risk-description">
+                        <p class="editable"><strong>תיאור הסיכון:</strong><br>
+                        עקב ריבוי הפריטים והאיפיונים השונים (טקסטים, סרטונים, אנימציות, אינטראקציות), קיים צורך להבטיח ש<strong>כל התכנים עומדים בסטנדרטים הנדרשים</strong>. נקודת תשומת לב מרכזית: <strong>סרטונים ותכנים המשתמשים בשפה</strong> - יש לוודא שהשפה תקנית ומתאימה לקהל היעד. היקף התוכן הרחב מחייב מנגנוני בקרת איכות יעילים.</p>
+                    </div>
+
+                    <div class="risk-subsection impacts">
+                        <h4 class="editable">📉 השלכות אפשריות:</h4>
+                        <ul>
+                            <li class="editable">תכנים שאינם תואמים את הציפיות המקצועיות</li>
+                            <li class="editable">צורך בתיקונים לאחר השקה</li>
+                            <li class="editable">משוב שלילי ממורים והורים</li>
+                        </ul>
+                    </div>
+
+                    <div class="corrective-actions">
+                        <h4>🔧 פעילויות מתקנות:</h4>
+                        
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">א. הגדרת מדיניות תוכן ושפה (Tone of Voice)</span>
+                                <span class="phase-badge phase-planning">📐 תכנון</span>
+                            </div>
+                            <div class="action-description">
+                                עקרונות מנחים ברורים מהמפמ"ר לחברות התוכן: רמת שפה נדרשת, ביטויים מותרים/אסורים, סגנון פנייה לתלמידים. מסמך מחייב כחלק מהסכם ההתקשרות.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: חוסר בהירות לגבי הציפיות מחברות התוכן</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ב. דרישת בדיקות QA פנימיות מהספק</span>
+                                <span class="phase-badge phase-planning">📐 תכנון</span>
+                            </div>
+                            <div class="action-description">
+                                חיוב הספק לבצע בדיקות איכות פנימיות לפני הגשה, עם צ'קליסט מוגדר ואישור בכתב שהתוכן עומד בדרישות.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: הגשת תוכן ללא סינון מקדים</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ג. בדיקה ממוקדת של תכנים רגישים</span>
+                                <span class="phase-badge phase-execution">⚙️ ביצוע</span>
+                            </div>
+                            <div class="action-description">
+                                במהלך הפיילוט - בדיקה מלאה לפי שיקול המפמ"ר של סרטונים, דיאלוגים ותכנים בעלי רגישות מיוחדת.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: תכנים רגישים דורשים תשומת לב מיוחדת</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ד. מדידה מדגמית של בעיות איכות</span>
+                                <span class="phase-badge phase-control">📊 בקרה</span>
+                            </div>
+                            <div class="action-description">
+                                בדיקה מדגמית שוטפת של פריטי תוכן אקראיים, עם מדידת שיעור הליקויים לעומת רף שנקבע מראש (למשל: עד 5% ליקויים). חריגה מהרף מחייבת בדיקה מורחבת.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: קושי לזהות בעיות בהיקף רחב של תכנים</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- סיכון 4 -->
+                <div class="risk-card medium">
+                    <div class="risk-header">
+                        <div class="risk-title editable">4️⃣ אתגר משוב: צורך במנגנון לזיהוי ותיקון ליקויים</div>
+                        <div class="risk-severity">
+                            <span class="severity-badge severity-medium editable">בינונית 🟠</span>
+                            <div class="risk-metrics">
+                                <span class="metric editable">הסתברות: 8/10</span>
+                                <span class="metric editable">השפעה: 5/10</span>
+                                <span class="metric editable">חומרה: 40</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="risk-description">
+                        <p class="editable"><strong>תיאור הסיכון:</strong><br>
+                        גם לאחר בדיקות מקדימות, עלולים להתגלות ליקויים במהלך השימוש בפועל. ללא מנגנון יעיל לקבלת משוב מהשטח ותיקון מהיר, <strong>בעיות עלולות להימשך זמן רב</strong>. מורים ותלמידים המשתמשים בתוכן הם "עיניים נוספות" שיכולות לסייע בזיהוי נקודות לשיפור.</p>
+                    </div>
+
+                    <div class="risk-subsection impacts">
+                        <h4 class="editable">📉 השלכות אפשריות:</h4>
+                        <ul>
+                            <li class="editable">ליקויים שלא מתוקנים לאורך זמן</li>
+                            <li class="editable">תסכול משתמשים מחוסר מענה</li>
+                            <li class="editable">אובדן מידע חשוב לשיפור התוכן</li>
+                        </ul>
+                    </div>
+
+                    <div class="corrective-actions">
+                        <h4>🔧 פעילויות מתקנות:</h4>
+                        
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">א. הגדרת תהליך דיווח ותיקון</span>
+                                <span class="phase-badge phase-planning">📐 תכנון</span>
+                            </div>
+                            <div class="action-description">
+                                תכנון מנגנון "דגלול" (flagging) למורים ותלמידים לדיווח על ליקויים, כולל SLA לזמני תגובה ותיקון מצד הספק.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: חוסר ערוץ מסודר לדיווח</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ב. הפעלת מערכת משוב בפיילוט</span>
+                                <span class="phase-badge phase-execution">⚙️ ביצוע</span>
+                            </div>
+                            <div class="action-description">
+                                יישום מערכת דיווח פשוטה ונגישה, עם מעקב אחר כל פנייה והבטחת טיפול.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: ליקויים שאינם מדווחים</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ג. ניטור שיעור הליקויים וזמני תיקון</span>
+                                <span class="phase-badge phase-control">📊 בקרה</span>
+                            </div>
+                            <div class="action-description">
+                                מעקב אחר מספר הדיווחים, סוגי הליקויים הנפוצים, וזמני התיקון בפועל. השוואה ליעדים שנקבעו.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: חוסר יכולת להעריך את היקף הבעיות</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- קטגוריה ג: סיכונים ארגוניים ורגולטוריים -->
+                <div class="category-header">
+                    📁 קטגוריה ג': סיכונים ארגוניים ורגולטוריים
+                </div>
+
+                <!-- סיכון 5 -->
+                <div class="risk-card medium">
+                    <div class="risk-header">
+                        <div class="risk-title editable">5️⃣ אתגר תפקידי: התאמת תפקיד המפמ"ר למציאות החדשה</div>
+                        <div class="risk-severity">
+                            <span class="severity-badge severity-medium editable">בינונית 🟠</span>
+                            <div class="risk-metrics">
+                                <span class="metric editable">הסתברות: 7/10</span>
+                                <span class="metric editable">השפעה: 5/10</span>
+                                <span class="metric editable">חומרה: 35</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="risk-description">
+                        <p class="editable"><strong>תיאור הסיכון:</strong><br>
+                        המעבר מבדיקת תוכן ליניארי לפיקוח על תוכן מסועף <strong>מחייב חשיבה מחודשת על תפקיד המפמ"ר</strong>. כשהתפקיד היה "לעבור על כל הפריטים ולאשר", היה תחום אחריות ברור. כעת נדרשת גמישות מחשבתית ומתודולוגית. ללא הגדרה ברורה של התפקיד המעודכן, עלולה להיווצר <strong>אי-בהירות ותחושת חוסר ודאות</strong>.</p>
+                    </div>
+
+                    <div class="risk-subsection impacts">
+                        <h4 class="editable">📉 השלכות אפשריות:</h4>
+                        <ul>
+                            <li class="editable">קושי בהתאמה לדרך העבודה החדשה</li>
+                            <li class="editable">חוסר בהירות לגבי גבולות האחריות</li>
+                            <li class="editable">צורך בהכשרה ותמיכה בתהליך המעבר</li>
+                        </ul>
+                    </div>
+
+                    <div class="corrective-actions">
+                        <h4>🔧 פעילויות מתקנות:</h4>
+                        
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">א. הגדרה מחודשת של תפקיד המפמ"ר</span>
+                                <span class="phase-badge phase-planning">📐 תכנון</span>
+                            </div>
+                            <div class="action-description">
+                                ניסוח תפקיד המפמ"ר כ"מגדיר עקרונות" ו"בודק מדגמי" במקום "בודק כל פריט". הגדרה ברורה של סמכויות, אחריות וכלים.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: חוסר בהירות בהגדרת התפקיד</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ב. מעורבות המפמ"ר בעיצוב התהליך</span>
+                                <span class="phase-badge phase-planning">📐 תכנון</span>
+                            </div>
+                            <div class="action-description">
+                                שיתוף המפמ"רים בהגדרת הקריטריונים, מדיניות התוכן ומתודולוגיית הדגימה - יצירת בעלות על התהליך.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: תחושת ניכור מהתהליך</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ג. ליווי והכשרה במהלך הפיילוט</span>
+                                <span class="phase-badge phase-execution">⚙️ ביצוע</span>
+                            </div>
+                            <div class="action-description">
+                                תמיכה שוטפת במפמ"רים במהלך הפיילוט, כולל הכשרה על כלים חדשים ומענה לשאלות ואתגרים.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: קושי ביישום בפועל</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ד. הערכת שביעות רצון ואפקטיביות</span>
+                                <span class="phase-badge phase-control">📊 בקרה</span>
+                            </div>
+                            <div class="action-description">
+                                איסוף משוב מהמפמ"רים על התהליך החדש - מה עובד, מה דורש שיפור, האם ההגדרות ברורות.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: קושי לזהות בעיות בתהליך</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- סיכון 6 -->
+                <div class="risk-card medium">
+                    <div class="risk-header">
+                        <div class="risk-title editable">6️⃣ אתגר נוהלי: צורך במסגרת רגולטורית מותאמת</div>
+                        <div class="risk-severity">
+                            <span class="severity-badge severity-medium editable">בינונית 🟠</span>
+                            <div class="risk-metrics">
+                                <span class="metric editable">הסתברות: 6/10</span>
+                                <span class="metric editable">השפעה: 6/10</span>
+                                <span class="metric editable">חומרה: 36</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="risk-description">
+                        <p class="editable"><strong>תיאור הסיכון:</strong><br>
+                        הנהלים הקיימים נבנו לבדיקת תוכן ליניארי. <strong>נדרשת התאמה של המסגרת הנוהלית</strong> לאישור תוכן מסועף על בסיס דגימה מדעית. ללא מסגרת ברורה, עלול להיווצר עיכוב בתהליך או חוסר בהירות לגבי תוקף האישור.</p>
+                    </div>
+
+                    <div class="risk-subsection impacts">
+                        <h4 class="editable">📉 השלכות אפשריות:</h4>
+                        <ul>
+                            <li class="editable">עיכובים עקב חוסר נוהל מתאים</li>
+                            <li class="editable">חוסר בהירות לגבי תוקף האישור</li>
+                            <li class="editable">צורך בהתייעצות משפטית</li>
+                        </ul>
+                    </div>
+
+                    <div class="corrective-actions">
+                        <h4>🔧 פעילויות מתקנות:</h4>
+                        
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">א. פיתוח נוהל אישור לתוכן מסועף</span>
+                                <span class="phase-badge phase-planning">📐 תכנון</span>
+                            </div>
+                            <div class="action-description">
+                                גיבוש נוהל רשמי המגדיר כיצד מאשרים תוכן לא-ליניארי: שיטת הדגימה, הקריטריונים, תיעוד התהליך, וחלוקת האחריות.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: היעדר נוהל מתאים</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ב. הגדרת אחריות ספק במסגרת SLA</span>
+                                <span class="phase-badge phase-planning">📐 תכנון</span>
+                            </div>
+                            <div class="action-description">
+                                הכללת סעיפים בהסכם עם הספק: אחריות על איכות התוכן, התחייבות לתיקון ליקויים, ביטוחים רלוונטיים.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: חוסר בהירות בחלוקת האחריות</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ג. תיעוד מלא של תהליך הבדיקה</span>
+                                <span class="phase-badge phase-execution">⚙️ ביצוע</span>
+                            </div>
+                            <div class="action-description">
+                                תיעוד מפורט של כל בדיקה שבוצעה: מה נבדק, מתי, על ידי מי, ומה הממצאים - ליצירת תיק מעקב מלא.
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: קושי להוכיח שבוצעה בדיקה נאותה</div>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-header">
+                                <span class="action-title">ד. סקירה תקופתית של הנוהל</span>
+                                <span class="phase-badge phase-control">📊 בקרה</span>
+                            </div>
+                            <div class="action-description">
+                                בחינת אפקטיביות הנוהל בסוף הפיילוט: האם הוא עונה על הצרכים? האם נדרשים עדכונים?
+                            </div>
+                            <div class="risk-component">מרכיב סיכון: נוהל שאינו מתאים למציאות</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- סיכום -->
+                <div class="summary-box">
+                    <h3 class="editable">📊 סיכום רמות חומרה</h3>
+                    <div class="summary-stats">
+                        <div class="stat-item">
+                            <span class="stat-number editable">3</span>
+                            <span class="stat-label editable">🔴 סיכונים ברמה גבוהה (49-90)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number editable">3</span>
+                            <span class="stat-label editable">🟠 סיכונים ברמה בינונית (25-48)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number editable">0</span>
+                            <span class="stat-label editable">🟢 סיכונים ברמה נמוכה (1-24)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- טבלת מיפוי פעילויות לשלבים -->
+                <div class="legend-box" style="margin-top: 30px;">
+                    <div class="legend-title">📋 סיכום פעילויות מתקנות לפי שלבי פיילוט:</div>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <thead>
+                            <tr style="background: #667eea; color: white;">
+                                <th style="padding: 12px; text-align: right; border-radius: 8px 0 0 0;">שלב</th>
+                                <th style="padding: 12px; text-align: right;">פעילויות עיקריות</th>
+                                <th style="padding: 12px; text-align: right; border-radius: 0 8px 0 0;">אחראי</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #e3f2fd;">
+                                <td style="padding: 12px; font-weight: bold;">📐 תכנון</td>
+                                <td style="padding: 12px;">
+                                    • מטריצת דגימה מייצגת<br>
+                                    • ליבת ידע מינימלית<br>
+                                    • מדיניות תוכן ושפה<br>
+                                    • דרישות QA מספק<br>
+                                    • הגדרת תפקיד המפמ"ר<br>
+                                    • נוהל אישור + SLA
+                                </td>
+                                <td style="padding: 12px;">מפמ"ר + צוות פרויקט</td>
+                            </tr>
+                            <tr style="background: #fff3e0;">
+                                <td style="padding: 12px; font-weight: bold;">⚙️ ביצוע</td>
+                                <td style="padding: 12px;">
+                                    • בדיקה מלאה של מסלולים נבחרים<br>
+                                    • בדיקה השוואתית בין עולמות<br>
+                                    • בדיקה ממוקדת של תכנים רגישים<br>
+                                    • הפעלת מערכת משוב<br>
+                                    • ליווי והכשרת מפמ"רים<br>
+                                    • תיעוד תהליך הבדיקה
+                                </td>
+                                <td style="padding: 12px;">מפמ"ר + ספק</td>
+                            </tr>
+                            <tr style="background: #f3e5f5;">
+                                <td style="padding: 12px; font-weight: bold;">📊 בקרה</td>
+                                <td style="padding: 12px;">
+                                    • ניטור כיסוי מסלולים שנבדקו<br>
+                                    • מדידת עקביות לפי רובריקה<br>
+                                    • מדידה מדגמית של בעיות איכות<br>
+                                    • ניטור שיעור ליקויים וזמני תיקון<br>
+                                    • הערכת שביעות רצון מפמ"רים<br>
+                                    • סקירת אפקטיביות הנוהל
+                                </td>
+                                <td style="padding: 12px;">מפמ"ר + צוות בקרה</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="footer">
+            <p class="editable">פיתוח ועיצוב המוצר: ד"ר אסף אוזן</p>
+        </div>
+    </div>
+
+    <script>
+        let isEditMode = false;
+        let originalContent = '';
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const editableElements = document.querySelectorAll('.editable');
+            const editBtn = document.querySelector('.btn-edit');
+            const saveBtn = document.querySelector('.btn-save');
+            const cancelBtn = document.querySelector('.btn-cancel');
+            const indicator = document.getElementById('editIndicator');
+            const editBtnText = document.getElementById('editBtnText');
+
+            if (isEditMode) {
+                originalContent = document.querySelector('.container').innerHTML;
+                editableElements.forEach(element => {
+                    element.setAttribute('contenteditable', 'true');
+                });
+                editBtn.style.background = 'linear-gradient(135deg, #eb3349 0%, #f45c43 100%)';
+                editBtnText.textContent = 'צא ממצב עריכה';
+                saveBtn.style.display = 'flex';
+                cancelBtn.style.display = 'flex';
+                indicator.style.display = 'block';
+                showToast('מצב עריכה פעיל', 'info');
+            } else {
+                editableElements.forEach(element => {
+                    element.setAttribute('contenteditable', 'false');
+                });
+                editBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                editBtnText.textContent = 'מצב עריכה';
+                saveBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                indicator.style.display = 'none';
+            }
+        }
+
+        function saveChanges() {
+            if (!isEditMode) return;
+            originalContent = document.querySelector('.container').innerHTML;
+            showToast('השינויים נשמרו בהצלחה! ✓', 'success');
+            toggleEditMode();
+        }
+
+        function cancelChanges() {
+            if (!isEditMode) return;
+            if (confirm('האם אתה בטוח שברצונך לבטל את כל השינויים?')) {
+                document.querySelector('.container').innerHTML = originalContent;
+                showToast('השינויים בוטלו', 'info');
+                isEditMode = false;
+                const editBtn = document.querySelector('.btn-edit');
+                const saveBtn = document.querySelector('.btn-save');
+                const cancelBtn = document.querySelector('.btn-cancel');
+                const indicator = document.getElementById('editIndicator');
+                const editBtnText = document.getElementById('editBtnText');
+                editBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                editBtnText.textContent = 'מצב עריכה';
+                saveBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                indicator.style.display = 'none';
+            }
+        }
+
+        function printReport() {
+            if (isEditMode) {
+                const editableElements = document.querySelectorAll('.editable');
+                editableElements.forEach(element => {
+                    element.setAttribute('contenteditable', 'false');
+                });
+            }
+            window.print();
+            if (isEditMode) {
+                const editableElements = document.querySelectorAll('.editable');
+                editableElements.forEach(element => {
+                    element.setAttribute('contenteditable', 'true');
+                });
+            }
+        }
+
+        function exportToHTML() {
+            const content = document.documentElement.outerHTML;
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'דוח_ניהול_סיכונים_' + new Date().toISOString().split('T')[0] + '.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('הקובץ יורד למחשב שלך ✓', 'success');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                toggleEditMode();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (isEditMode) saveChanges();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+            if (e.key === 'Escape' && isEditMode) {
+                cancelChanges();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            originalContent = document.querySelector('.container').innerHTML;
+        });
+    </script>
+</body>
+</html>
